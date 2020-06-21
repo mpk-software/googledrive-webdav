@@ -1,0 +1,8 @@
+# Composer's 3rd party dependencies
+vendor
+
+# Credentials you got from google when registering a new application for using the Drive API
+credentials.json
+token.json
+
+config.php
