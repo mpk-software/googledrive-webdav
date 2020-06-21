@@ -78,6 +78,8 @@ class GoogleDriveWebDavBridge
                     if ($this->config['remove_files_after_sync'] === true) {
                         $this->deleteFileFromGoogleDrive($file);
                     }
+                } else {
+                    $this->logger->error(sprintf('Unable to store file "%s" to WebDAV storage', $file->getName()));
                 }
             }
         }
