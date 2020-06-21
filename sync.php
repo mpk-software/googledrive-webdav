@@ -15,7 +15,7 @@ if (php_sapi_name() != 'cli') {
 $config = require 'config.php';
 
 if ($config['logging_enabled']) {
-    $logger = new Logger('name');
+    $logger = new Logger('stdout');
     $logger->pushHandler(new StreamHandler('php://stdout'));
 } else {
     $logger = new NullLogger();
