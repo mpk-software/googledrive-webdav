@@ -46,17 +46,13 @@ class GoogleDriveWebDavSyncCommand extends Command
      * GoogleDriveWebDavBridge constructor.
      *
      * @param array $config
-     * @throws Exception
      */
     public function __construct(array $config)
     {
-        parent::__construct();
-
         $this->logger = new Logger('googledrive-webdav-sync');
         $this->config = array_merge(static::DEFAULT_CONFIG, $config);
 
-        $this->googleDriveService = $this->createGoogleDriveService();
-        $this->webDavClient = $this->createWebDavClient();
+        parent::__construct();
     }
 
     /**
@@ -83,29 +79,38 @@ class GoogleDriveWebDavSyncCommand extends Command
     {
         $this->logger->setHandlers([new ConsoleHandler($output)]);
 
-        $files = $this->getFilesFromGoogleDrive();
-        if (empty($files)) {
-            $this->logger->info('No files to sync');
-        } else {
-            $this->logger->info(sprintf('Start syncing %d files' . PHP_EOL, count($files)));
+        try {
+            $this->googleDriveService = $this->createGoogleDriveService();
+            $this->webDavClient = $this->createWebDavClient();
 
-            foreach ($files as $file) {
-                $this->logger->info(sprintf('Syncing file %s' . PHP_EOL, $file->getName()));
+            $files = $this->getFilesFromGoogleDrive();
+            if (empty($files)) {
+                $this->logger->info('No files to sync');
+            } else {
+                $this->logger->info(sprintf('Start syncing %d files' . PHP_EOL, count($files)));
 
-                $fileContent = $this->downloadFileFromGoogleDrive($file);
+                foreach ($files as $file) {
+                    $this->logger->info(sprintf('Syncing file %s' . PHP_EOL, $file->getName()));
 
-                if ($this->putFileToWebDAV($file->getName(), $fileContent)) {
-                    $this->logger->info(sprintf('Successfully synced file %s' . PHP_EOL, $file->getName()));
+                    $fileContent = $this->downloadFileFromGoogleDrive($file);
 
-                    // Remove the file from Google Drive
-                    if ($this->config['remove_files_after_sync'] === true) {
-                        $this->deleteFileFromGoogleDrive($file);
+                    if ($this->putFileToWebDAV($file->getName(), $fileContent)) {
+                        $this->logger->info(sprintf('Successfully synced file %s' . PHP_EOL, $file->getName()));
+
+                        // Remove the file from Google Drive
+                        if ($this->config['remove_files_after_sync'] === true) {
+                            $this->deleteFileFromGoogleDrive($file);
+                        }
+                    } else {
+                        $this->logger->error(sprintf('Unable to store file "%s" to WebDAV storage', $file->getName()));
+                        return Command::FAILURE;
                     }
-                } else {
-                    $this->logger->error(sprintf('Unable to store file "%s" to WebDAV storage', $file->getName()));
-                    return Command::FAILURE;
                 }
             }
+
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+            return Command::FAILURE;
         }
 
         return Command::SUCCESS;
