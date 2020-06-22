@@ -1,6 +1,7 @@
 {
   "name": "marioklump/googledrive-webdav",
   "description": "A CLI script for moving files from Google Drive to a WebDAV storage",
+  "version": "0.0.1",
   "license": "MIT",
   "authors": [
     {
@@ -19,6 +20,7 @@
     "ext-json": "*",
     "psr/log": "^1.1",
     "monolog/monolog": "^2.1",
-    "symfony/console": "^5.1"
+    "symfony/console": "^5.1",
+    "symfony/monolog-bridge": "^5.1"
   }
 }

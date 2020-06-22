@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+
+use marioklump\googledrivewebdav\GoogleDriveWebDavSyncCommand;
+use Symfony\Component\Console\Application;
+
+define('DS', DIRECTORY_SEPARATOR);
+define('ROOT_DIR', __DIR__.DS.'..');
+
+require ROOT_DIR.DS.'vendor/autoload.php';
+
+$config = require ROOT_DIR.DS.'config.php';
+
+/* Get the application's version from the composer.json file */
+$version = json_decode(file_get_contents(ROOT_DIR.DS.'composer.json'))->version;
+
+$application = new Application('sync', $version);
+
+$syncCommand = new GoogleDriveWebDavSyncCommand(
+    [
+        'google_drive_dir' => $config['google_drive_dir'],
+        'webdav_dir' => $config['webdav_dir'],
+        'webdav_url' => $config['webdav_url'],
+        'webdav_user' => $config['webdav_user'],
+        'webdav_password' => $config['webdav_password'],
+        'remove_files_after_sync' => $config['remove_files_after_sync'],
+        'google_drive_credentials_file' => ROOT_DIR.DS.'credentials.json',
+        'google_drive_token_file' => ROOT_DIR.DS.'token.json',
+    ]
+);
+$application->add($syncCommand);
+
+$application->setDefaultCommand($syncCommand->getName(), true);
+$application->run();

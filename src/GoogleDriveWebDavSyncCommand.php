@@ -1,4 +1,5 @@
 <?php
+
 namespace marioklump\googledrivewebdav;
 
 use Exception;
@@ -6,14 +7,18 @@ use Google_Client;
 use Google_Service_Drive;
 use Google_Service_Drive_DriveFile;
 use GuzzleHttp\Psr7\Response;
+use Monolog\Logger;
 use Psr\Http\Message\StreamInterface;
-use Psr\Log\LoggerInterface;
 use Sabre\DAV\Client;
+use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class GoogleDriveWebDavBridge
+class GoogleDriveWebDavSyncCommand extends Command
 {
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -25,7 +30,7 @@ class GoogleDriveWebDavBridge
     /**
      * @var array
      */
-    private $config = [];
+    private $config;
 
     /**
      * @var Google_Service_Drive
@@ -40,26 +45,44 @@ class GoogleDriveWebDavBridge
     /**
      * GoogleDriveWebDavBridge constructor.
      *
-     * @param LoggerInterface $logger
      * @param array $config
      * @throws Exception
      */
-    public function __construct(LoggerInterface $logger, array $config)
+    public function __construct(array $config)
     {
-        $this->logger = $logger;
+        parent::__construct();
+
+        $this->logger = new Logger('googledrive-webdav-sync');
         $this->config = array_merge(static::DEFAULT_CONFIG, $config);
 
-        $this->googleDriveService = $this->getGoogleDriveService();
-        $this->webDavClient = $this->getWebDavClient();
+        $this->googleDriveService = $this->createGoogleDriveService();
+        $this->webDavClient = $this->createWebDavClient();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function configure()
+    {
+        parent::configure();
+
+        $this
+            ->setName('GoogleDrive to WebDAV sync')
+            ->setDescription('Moves files from Google Drive to a WebDAV storage');
     }
 
     /**
      * Sync all files from the Google Drive storage to the WebDAV storage.
      *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
      * @throws Exception
      */
-    public function sync(): void
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->logger->setHandlers([new ConsoleHandler($output)]);
+
         $files = $this->getFilesFromGoogleDrive();
         if (empty($files)) {
             $this->logger->info('No files to sync');
@@ -80,88 +103,22 @@ class GoogleDriveWebDavBridge
                     }
                 } else {
                     $this->logger->error(sprintf('Unable to store file "%s" to WebDAV storage', $file->getName()));
+                    return Command::FAILURE;
                 }
             }
         }
-    }
 
-    /**
-     * Find a directory in the Google Drive storage.
-     *
-     * @param string $path
-     * @param Google_Service_Drive $service
-     * @return Google_Service_Drive_DriveFile
-     * @throws Exception
-     */
-    private function findDirectory(string $path, Google_Service_Drive $service): Google_Service_Drive_DriveFile
-    {
-        $directories = $service->files->listFiles([
-            'q' => "trashed = false AND mimeType='application/vnd.google-apps.folder' AND name='{$path}'"
-        ]);
-
-        if (empty($directories)) {
-            throw new Exception('Unable to find directory ' . $path);
-        }
-
-        return $directories->getFiles()[0];
-    }
-
-    /**
-     * @return Google_Service_Drive_DriveFile|array
-     * @throws Exception
-     */
-    private function getFilesFromGoogleDrive(): array
-    {
-        $inputDir = $this->findDirectory($this->config['google_drive_dir'], $this->googleDriveService);
-
-        $results = $this->googleDriveService->files->listFiles([
-            'q' => "trashed = false AND '{$inputDir->getId()}' IN parents"
-        ]);
-
-        return $results->getFiles();
-    }
-
-    /**
-     * @param Google_Service_Drive_DriveFile $file
-     * @return StreamInterface
-     */
-    private function downloadFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
-    {
-        /* @var Response $response */
-        $response = $this->googleDriveService->files->get($file->getId(), ['alt' => 'media']);
-
-        return $response->getBody();
-    }
-
-    /**
-     * Remove the file from Google Drive.
-     *
-     * @param Google_Service_Drive_DriveFile $file
-     */
-    private function deleteFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
-    {
-        $this->googleDriveService->files->delete($file->getId());
-    }
-
-    private function putFileToWebDAV(string $filename, $content): bool
-    {
-        // Move the file to the WebDAV storage
-        $response = $this->webDavClient->request(
-            'PUT',
-            rtrim($this->config['webdav_dir'], '/') . '/' . $filename,
-            $content
-        );
-
-        return $response['statusCode'] === 201;
+        return Command::SUCCESS;
     }
 
     /**
      * Returns an authorized Google API client.
+     *
      * @return Google_Client the authorized client object
      * @throws Exception
      * @see https://developers.google.com/drive/api/v3/quickstart/php
      */
-    private function getGoogleClient(): Google_Client
+    private function createGoogleClient(): Google_Client
     {
         $client = new Google_Client();
         $client->setApplicationName('GoogleDrive-WebDAV-Bridge');
@@ -210,23 +167,104 @@ class GoogleDriveWebDavBridge
     }
 
     /**
+     * Create a Google Drive service.
+     *
      * @return Google_Service_Drive
      * @throws Exception
      */
-    private function getGoogleDriveService(): Google_Service_Drive
+    private function createGoogleDriveService(): Google_Service_Drive
     {
-        return new Google_Service_Drive($this->getGoogleClient());
+        return new Google_Service_Drive($this->createGoogleClient());
     }
 
     /**
+     * Create a WebDAV client.
+     *
      * @return Client
      */
-    private function getWebDavClient(): Client
+    private function createWebDavClient(): Client
     {
         return new Client([
             'baseUri' => $this->config['webdav_url'],
             'userName' => $this->config['webdav_user'],
             'password' => $this->config['webdav_password'],
         ]);
+    }
+
+    /**
+     * Find a directory in the Google Drive storage.
+     *
+     * @param string $path
+     * @param Google_Service_Drive $service
+     * @return Google_Service_Drive_DriveFile
+     * @throws Exception
+     */
+    private function findDirectoryInGoogleDrive(string $path, Google_Service_Drive $service): Google_Service_Drive_DriveFile
+    {
+        $directories = $service->files->listFiles([
+            'q' => "trashed = false AND mimeType='application/vnd.google-apps.folder' AND name='{$path}'"
+        ]);
+
+        if (empty($directories)) {
+            throw new Exception('Unable to find directory ' . $path);
+        }
+
+        return $directories->getFiles()[0];
+    }
+
+    /**
+     * @return Google_Service_Drive_DriveFile|array
+     * @throws Exception
+     */
+    private function getFilesFromGoogleDrive(): array
+    {
+        $inputDir = $this->findDirectoryInGoogleDrive($this->config['google_drive_dir'], $this->googleDriveService);
+
+        $results = $this->googleDriveService->files->listFiles([
+            'q' => "trashed = false AND '{$inputDir->getId()}' IN parents"
+        ]);
+
+        return $results->getFiles();
+    }
+
+    /**
+     * @param Google_Service_Drive_DriveFile $file
+     * @return StreamInterface
+     */
+    private function downloadFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
+    {
+        /* @var Response $response */
+        $response = $this->googleDriveService->files->get($file->getId(), ['alt' => 'media']);
+
+        return $response->getBody();
+    }
+
+    /**
+     * Remove the file from Google Drive.
+     *
+     * @param Google_Service_Drive_DriveFile $file
+     */
+    private function deleteFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
+    {
+        $this->googleDriveService->files->delete($file->getId());
+    }
+
+    /**
+     * Store a file to the WebDAV storage.
+     *
+     * @param string $filename
+     * @param string|resource $content
+     * @return bool true, if the file was successfully created
+     */
+    private function putFileToWebDAV(string $filename, $content): bool
+    {
+        // Move the file to the WebDAV storage
+        $response = $this->webDavClient->request(
+            'PUT',
+            rtrim($this->config['webdav_dir'], '/') . '/' . $filename,
+            $content
+        );
+
+        return $response['statusCode'] === 201;
     }
 }

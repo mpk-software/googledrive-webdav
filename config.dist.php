@@ -6,6 +6,5 @@ return [
     'webdav_dir' => '',
     'webdav_user' => '',
     'webdav_password' => '',
-    'remove_files_after_sync' => true,
-    'logging_enabled' => true,
+    'remove_files_after_sync' => true
 ];
