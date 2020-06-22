@@ -41,4 +41,4 @@ For debugging purposes you are able to set verbosity flags:
 ./bin/sync -vvv
 ```
 
-It is recommended to run the above command as a cronjob to automatically move all files from youe Google Drive to your WebDAV storage.
+It is recommended to run the above command as a cronjob to automatically move all files from your Google Drive to your WebDAV storage.
