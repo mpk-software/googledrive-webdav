@@ -1,4 +1,4 @@
-# googledrive-webdav
+# GoogleDrive-WebDAV-Sync
 A CLI script for moving files from Google Drive to a WebDAV storage.
 
 ## Restrictions
