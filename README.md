@@ -36,4 +36,9 @@ Please call the following command:
 ./bin/sync
 ```
 
+For debugging purposes you are able to set verbosity flags: 
+```sh
+./bin/sync -vvv
+```
+
 It is recommended to run the above command as a cronjob to automatically move all files from youe Google Drive to your WebDAV storage.
