@@ -18,13 +18,13 @@ You'll get a file called `credentials.json` which have to be stored in this proj
 
 Copy the `config.dist.php` file inside this repository to a file named `config.php`. Fill the missing properties of this configuration file.
 
-Call `./bin/console init` to initialize the connection to the Google Drive API. This command uses the previously stored `credentials.json` file to authenticate with Google Drive's API.
+Call `./bin/sync` to initialize the connection to the Google Drive API. This command uses the previously stored `credentials.json` file to authenticate with Google Drive's API.
 The command prints an URL which you should open to get a verification code. Please type in the verification code to the console's prompt.
 
 ## Sync
-After installing script and initializing the connection to the Google Drive API, you are able to start the synchronization.
+After installing the script and initializing the connection to the Google Drive API, you are able to start the synchronization.
 Please call the following command:
 
 ```sh
-./bin/console sync
+./bin/sync
 ```

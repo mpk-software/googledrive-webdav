@@ -197,36 +197,13 @@ class GoogleDriveWebDavSyncCommand extends Command
     }
 
     /**
-     * Find a directory in the Google Drive storage.
-     *
-     * @param string $path
-     * @param Google_Service_Drive $service
-     * @return Google_Service_Drive_DriveFile
-     * @throws Exception
-     */
-    private function findDirectoryInGoogleDrive(string $path, Google_Service_Drive $service): Google_Service_Drive_DriveFile
-    {
-        $directories = $service->files->listFiles([
-            'q' => "trashed = false AND mimeType='application/vnd.google-apps.folder' AND name='{$path}'"
-        ]);
-
-        if (empty($directories)) {
-            throw new Exception('Unable to find directory ' . $path);
-        }
-
-        return $directories->getFiles()[0];
-    }
-
-    /**
      * @return Google_Service_Drive_DriveFile|array
      * @throws Exception
      */
     private function getFilesFromGoogleDrive(): array
     {
-        $inputDir = $this->findDirectoryInGoogleDrive($this->config['google_drive_dir'], $this->googleDriveService);
-
         $results = $this->googleDriveService->files->listFiles([
-            'q' => "trashed = false AND '{$inputDir->getId()}' IN parents"
+            'q' => "trashed = false AND '{$this->config['google_drive_folder_id']}' IN parents"
         ]);
 
         return $results->getFiles();

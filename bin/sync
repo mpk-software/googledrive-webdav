@@ -18,7 +18,7 @@ $application = new Application('sync', $version);
 
 $syncCommand = new GoogleDriveWebDavSyncCommand(
     [
-        'google_drive_dir' => $config['google_drive_dir'],
+        'google_drive_folder_id' => $config['google_drive_folder_id'],
         'webdav_dir' => $config['webdav_dir'],
         'webdav_url' => $config['webdav_url'],
         'webdav_user' => $config['webdav_user'],
