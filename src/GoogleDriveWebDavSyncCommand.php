@@ -3,10 +3,9 @@
 namespace mpksoftware\googledrivewebdav;
 
 use Exception;
-use Google\Service\Drive\Drive;
+use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use Google_Client;
-use Google_Service_Drive;
 use GuzzleHttp\Psr7\Response;
 use Monolog\Logger;
 use Psr\Http\Message\StreamInterface;
@@ -110,7 +109,7 @@ class GoogleDriveWebDavSyncCommand extends Command
     {
         $client = new Google_Client();
         $client->setApplicationName('GoogleDrive-WebDAV-Bridge');
-        $client->setScopes(Google_Service_Drive::DRIVE);
+        $client->setScopes(Drive::DRIVE);
         $client->setAuthConfig($this->config['google_drive_credentials_file']);
         $client->setAccessType('offline');
         $client->setPrompt('select_account consent');
