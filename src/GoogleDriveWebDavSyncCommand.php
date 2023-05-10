@@ -3,9 +3,10 @@
 namespace mpksoftware\googledrivewebdav;
 
 use Exception;
+use Google\Service\Drive\Drive;
+use Google\Service\Drive\DriveFile;
 use Google_Client;
 use Google_Service_Drive;
-use Google_Service_Drive_DriveFile;
 use GuzzleHttp\Psr7\Response;
 use Monolog\Logger;
 use Psr\Http\Message\StreamInterface;
@@ -17,36 +18,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class GoogleDriveWebDavSyncCommand extends Command
 {
-    /**
-     * @var Logger
-     */
-    private $logger;
+    private Logger $logger;
 
     private const DEFAULT_CONFIG = [
         'google_drive_credentials_file' => 'credentials.json',
         'google_drive_token_file' => 'token.json',
     ];
 
-    /**
-     * @var array
-     */
-    private $config;
+    private array $config;
 
-    /**
-     * @var Google_Service_Drive
-     */
-    private $googleDriveService;
+    private Drive $googleDriveService;
 
-    /**
-     * @var Client
-     */
-    private $webDavClient;
+    private Client $webDavClient;
 
-    /**
-     * GoogleDriveWebDavBridge constructor.
-     *
-     * @param array $config
-     */
     public function __construct(array $config)
     {
         $this->logger = new Logger('googledrive-webdav-sync');
@@ -58,7 +42,7 @@ class GoogleDriveWebDavSyncCommand extends Command
     /**
      * @inheritDoc
      */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -70,12 +54,9 @@ class GoogleDriveWebDavSyncCommand extends Command
     /**
      * Sync all files from the Google Drive storage to the WebDAV storage.
      *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
      * @throws Exception
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger->setHandlers([new ConsoleHandler($output)]);
 
@@ -176,18 +157,15 @@ class GoogleDriveWebDavSyncCommand extends Command
     /**
      * Create a Google Drive service.
      *
-     * @return Google_Service_Drive
      * @throws Exception
      */
-    private function createGoogleDriveService(): Google_Service_Drive
+    private function createGoogleDriveService(): Drive
     {
-        return new Google_Service_Drive($this->createGoogleClient());
+        return new Drive($this->createGoogleClient());
     }
 
     /**
      * Create a WebDAV client.
-     *
-     * @return Client
      */
     private function createWebDavClient(): Client
     {
@@ -199,7 +177,7 @@ class GoogleDriveWebDavSyncCommand extends Command
     }
 
     /**
-     * @return Google_Service_Drive_DriveFile|array
+     * @return DriveFile[]
      * @throws Exception
      */
     private function getFilesFromGoogleDrive(): array
@@ -211,11 +189,7 @@ class GoogleDriveWebDavSyncCommand extends Command
         return $results->getFiles();
     }
 
-    /**
-     * @param Google_Service_Drive_DriveFile $file
-     * @return StreamInterface
-     */
-    private function downloadFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
+    private function downloadFileFromGoogleDrive(DriveFile $file): StreamInterface
     {
         /* @var Response $response */
         $response = $this->googleDriveService->files->get($file->getId(), ['alt' => 'media']);
@@ -225,10 +199,8 @@ class GoogleDriveWebDavSyncCommand extends Command
 
     /**
      * Remove the file from Google Drive.
-     *
-     * @param Google_Service_Drive_DriveFile $file
      */
-    private function deleteFileFromGoogleDrive(Google_Service_Drive_DriveFile $file)
+    private function deleteFileFromGoogleDrive(DriveFile $file): void
     {
         $this->googleDriveService->files->delete($file->getId());
     }
