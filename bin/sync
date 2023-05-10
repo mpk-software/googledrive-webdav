@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-use marioklump\googledrivewebdav\GoogleDriveWebDavSyncCommand;
+use mpksoftware\googledrivewebdav\GoogleDriveWebDavSyncCommand;
 use Symfony\Component\Console\Application;
 
 define('DS', DIRECTORY_SEPARATOR);

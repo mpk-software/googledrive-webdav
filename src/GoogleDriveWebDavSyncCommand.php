@@ -1,6 +1,6 @@
 <?php
 
-namespace marioklump\googledrivewebdav;
+namespace mpksoftware\googledrivewebdav;
 
 use Exception;
 use Google_Client;

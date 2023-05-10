@@ -1,5 +1,5 @@
 {
-  "name": "marioklump/googledrive-webdav",
+  "name": "mpksoftware/googledrive-webdav",
   "description": "A CLI script for moving files from Google Drive to a WebDAV storage",
   "version": "0.2.0",
   "license": "MIT",
@@ -11,7 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "marioklump\\googledrivewebdav\\": "src/"
+      "mpksoftware\\googledrivewebdav\\": "src/"
     }
   },
   "require": {

@@ -11,7 +11,7 @@ To use the "Scan to Cloud" feature, the scanner can be configured to scan to Goo
 ## Installation
 Clone the repository:
 ```sh
-git clone https://github.com/mpk-software/googledrive-webdav.git
+git clone https://github.com/mpksoftware/googledrive-webdav.git
 cd googledrive-webdav
 ```
 
