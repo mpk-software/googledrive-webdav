@@ -1,7 +1,7 @@
 {
   "name": "marioklump/googledrive-webdav",
   "description": "A CLI script for moving files from Google Drive to a WebDAV storage",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "license": "MIT",
   "authors": [
     {
