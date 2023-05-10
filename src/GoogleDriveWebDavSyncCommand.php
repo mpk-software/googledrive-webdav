@@ -103,6 +103,7 @@ class GoogleDriveWebDavSyncCommand extends Command
                         }
                     } else {
                         $this->logger->error(sprintf('Unable to store file "%s" to WebDAV storage', $file->getName()));
+
                         return Command::FAILURE;
                     }
                 }
@@ -110,6 +111,7 @@ class GoogleDriveWebDavSyncCommand extends Command
 
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
+
             return Command::FAILURE;
         }
 
