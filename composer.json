@@ -9,6 +9,9 @@
       "email": "mario@van-zadel.de"
     }
   ],
+  "scripts": {
+    "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+  },
   "autoload": {
     "psr-4": {
       "mpksoftware\\googledrivewebdav\\": "src/"
@@ -23,5 +26,10 @@
     "monolog/monolog": "^3.3",
     "symfony/console": "^6.2",
     "symfony/monolog-bridge": "^6.2"
+  },
+  "extra": {
+    "google/apiclient-services": [
+      "Drive"
+    ]
   }
 }
